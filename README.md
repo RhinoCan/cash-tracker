@@ -36,3 +36,11 @@ npm run dev
 ```sh
 npm run build
 ```
+
+## Enhancements
+
+- replace local storage with Pinia
+- change AddTransaction to have Description, Amount, and Income/Expense radio button
+- reformat app to include title bar and put each component on a card; use better background colour or picture
+- add an About 
+- replace VUE GUI components with Vuetify components including table for Transaction List

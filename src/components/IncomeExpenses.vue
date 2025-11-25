@@ -2,17 +2,17 @@
 <div class="inc-exp-container">
 <div>
 <h4>Income</h4>
-<p id="money-plus" class="money plus">${{ income }}</p>
+<p id="money-plus" class="money plus">${{ formattedIncome }}</p>
 </div>
 <div>
 <h4>Expense</h4>
-<p id="money-minus" class="money minus">${{ expenses }}</p>
+<p id="money-minus" class="money minus">${{ formattedExpenses }}</p>
 </div>
 </div>
 </template>
 
 <script setup>
-import {defineProps} from 'vue';
+//import {defineProps} from 'vue';
 const props = defineProps({
     income: {
         type: Number, 
@@ -23,4 +23,8 @@ const props = defineProps({
         required: true,
     }
 });
+
+// Format to 2 decimal places
+const formattedIncome = props.income.toFixed(2);
+const formattedExpenses = props.expenses.toFixed(2);
 </script>

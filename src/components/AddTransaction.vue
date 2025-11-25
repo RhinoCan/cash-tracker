@@ -1,4 +1,4 @@
-<template>
+<template> 
 <h3>Add new transaction</h3>
 <form id="form" @submit.prevent="onSubmit">
 <div class="form-control">
