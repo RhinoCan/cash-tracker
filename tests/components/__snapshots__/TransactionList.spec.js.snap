@@ -1,5 +1,10 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`===Test TransactionList component=== > matches snapshot 1`] = `
+"<h3>History</h3>
+<ul id="list" class="list"></ul>"
+`;
+
 exports[`TransactionList.vue > matches snapshot 1`] = `
 "<h3>History</h3>
 <ul id="list" class="list">

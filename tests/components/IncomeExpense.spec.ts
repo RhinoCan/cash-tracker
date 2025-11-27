@@ -1,17 +1,35 @@
+import { describe, test, expect, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { describe, test, expect } from 'vitest';
-import IncomeExpenses from '@/components/IncomeExpenses.vue';
+import { createPinia, setActivePinia } from 'pinia';
+import IncomeExpense from '@/components/IncomeExpense.vue';
+import { useTrackerStore } from '@/stores/Tracker.ts';
+import { ref } from 'vue';
 
-describe('IncomeExpenses component', () => {
+vi.mock('@/stores/Tracker.ts', () => ({
+  useTrackerStore: vi.fn(),
+}));
 
-  // --- Normal amounts ---
+describe('===Test IncomeExpenses component===', () => {
+  let mockStore: any; 
+  const mockedStore = useTrackerStore as unknown as ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+
+    mockStore = {
+      getIncome: ref('0.00'),
+      getExpense: ref('0.00') 
+    };
+
+    mockedStore.mockReturnValue(mockStore);
+  })
+
+  // --- Integer amounts ---
   test('Displays correct income and expense totals', () => {
-    const wrapper = mount(IncomeExpenses, {
-      props: {
-        income: 500,
-        expenses: 200
-      }
-    });
+    mockStore.getIncome.value = '500.00';
+    mockStore.getExpense.value = '200.00';
+
+    const wrapper = mount(IncomeExpense);
 
     const incomeField = wrapper.find('#money-plus');
     const expenseField = wrapper.find('#money-minus');
@@ -25,12 +43,10 @@ describe('IncomeExpenses component', () => {
 
   // --- Decimal amounts ---
   test('Displays decimal amounts correctly', () => {
-    const wrapper = mount(IncomeExpenses, {
-      props: {
-        income: 500.1,
-        expenses: 200.01
-      }
-    });
+    mockStore.getIncome.value = '500.10';
+    mockStore.getExpense.value = '200.01';
+
+    const wrapper = mount(IncomeExpense);
 
     const incomeField = wrapper.find('#money-plus');
     const expenseField = wrapper.find('#money-minus');
@@ -43,13 +59,12 @@ describe('IncomeExpenses component', () => {
   });
 
   // --- Zero amounts ---
+  
   test('Displays zero amounts correctly', () => {
-    const wrapper = mount(IncomeExpenses, {
-      props: {
-        income: 0,
-        expenses: 0
-      }
-    });
+    mockStore.getIncome.value = '0.00';
+    mockStore.getExpense.value = '0.00';
+
+    const wrapper = mount(IncomeExpense);
 
     const incomeField = wrapper.find('#money-plus');
     const expenseField = wrapper.find('#money-minus');
@@ -60,12 +75,10 @@ describe('IncomeExpenses component', () => {
 
   // --- Large numbers ---
   test('Handles large income and expense numbers', () => {
-    const wrapper = mount(IncomeExpenses, {
-      props: {
-        income: 1234567.89,
-        expenses: 987654.32
-      }
-    });
+    mockStore.getIncome.value = '1234567.89';
+    mockStore.getExpense.value = '987654.32';
+
+    const wrapper = mount(IncomeExpense);
 
     expect(wrapper.find('#money-plus').text()).toBe('$1234567.89');
     expect(wrapper.find('#money-minus').text()).toBe('$987654.32');
@@ -73,12 +86,10 @@ describe('IncomeExpenses component', () => {
 
   // --- Snapshot test ---
   test('Matches snapshot', () => {
-    const wrapper = mount(IncomeExpenses, {
-      props: {
-        income: 500,
-        expenses: 200
-      }
-    });
+    mockStore.getIncome.value = '500.00';
+    mockStore.getExpense.value = '200.00';
+
+    const wrapper = mount(IncomeExpense);
 
     expect(wrapper.html()).toMatchSnapshot();
   });
