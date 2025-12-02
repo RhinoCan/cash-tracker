@@ -1,14 +1,34 @@
-<template> 
-<h4>Your Balance</h4>
-<h1 id="balance">${{ formattedTotal }}</h1>
+<script setup lang="ts">
+import { computed } from "vue";
+import { useTrackerStore } from "@/stores/Tracker.ts";
+import { useCurrencyFormatter } from "@/composables/useCurrencyFormatter.ts";
+
+// Pinia store for transactions
+const storeTracker = useTrackerStore();
+
+// Compute total balance
+const totalBalance = computed(() => {
+  return storeTracker.getBalance;
+});
+
+//Call the composable function, which returns an object.
+//Destructure the 'displayMoney' property from that return
+const { displayMoney } = useCurrencyFormatter();
+</script>
+
+<template>
+  <v-card elevation="8">
+    <v-card-title class="bg-yellow">Account Balance</v-card-title>
+    <v-card-text>
+      <p v-if="storeTracker.getBalance >= 0" class="money plus">{{ displayMoney(storeTracker.getBalance) }}</p>
+      <p v-else class="money minus">{{ displayMoney(storeTracker.getBalance) }}</p>
+    </v-card-text>
+  </v-card>
 </template>
 
-<script setup lang="ts">
-import { computed } from 'vue';
-import { useTrackerStore } from '@/stores/Tracker'
-const storeTracker = useTrackerStore()
-
-const formattedTotal = computed(() => storeTracker.getBalance);
-console.log("Account balance - balance: " + formattedTotal);
-
-</script>
+<style scoped>
+h2 {
+  margin: 0;
+  font-size: 2rem;
+}
+</style>

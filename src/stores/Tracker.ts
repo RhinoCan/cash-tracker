@@ -3,14 +3,6 @@ import { useToast } from 'vue-toastification';
 import { Transaction } from '@/types/Transaction.ts';
 const toast = useToast();
 
-/* export const useTrackerStore = defineStore('storeTracker', {
-    state: () => ({ 
-        transactions: [
-             { "id": 9, "description": "Salary", "transactionType": "Income", "amount": 3000.00 },
-             { "id": 27, "description": "Air Fare", "transactionType": "Expense", "amount": 700.00 },
-             { "id": 6, "description": "Taxi", "transactionType": "Expense", "amount": 30.00 }
-        ] satisfies Transaction[]
-    }), */
  export const useTrackerStore = defineStore('storeTracker', {
     state: (): { transactions: Transaction[] } => ({
         transactions: [],
@@ -18,6 +10,8 @@ const toast = useToast();
     
     actions: {
         addTransaction(newTransaction: Transaction): void {
+
+            newTransaction.amount = parseFloat(String(newTransaction.amount)) || 0;
             
             /* Add the new transaction to the array in this store. */
             this.transactions.push(newTransaction)
@@ -27,6 +21,8 @@ const toast = useToast();
             localStorage.setItem('transactions', JSON.stringify(this.transactions));
         },
         updateTransaction(updatedTransaction: Transaction) {
+
+            updatedTransaction.amount = parseFloat(String(updatedTransaction.amount)) || 0;
 
             /* The updated transaction retains the original id. */
             const originalId = updatedTransaction.id

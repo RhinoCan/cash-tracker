@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "Node16", 
-    "moduleResolution": "Node16",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
@@ -13,10 +13,11 @@
     "types": ["vitest/globals"],
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "baseUrl": ".", 
+    "lib": ["ES2024", "DOM"],
+    "baseUrl": "./",
     "paths": {
-      "@/*": ["./src/*"] 
+      "@/*": ["src/*"]
     }
   },
-  "include": ["src", "tests", "vite.config.ts", "vitest.config.ts"]
+  "include": ["src", "tests", "vite.config.js", "vitest.config.ts"]
 }

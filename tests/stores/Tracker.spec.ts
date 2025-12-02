@@ -1,268 +1,229 @@
-// tests/stores/Tracker.spec.ts
-import { describe, test, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useTrackerStore } from '@/stores/Tracker.ts'
-import type { Transaction } from '@/types/Transaction.ts'
+import { describe, it, expect, beforeEach, vi } from 'vitest' // Added vi for mocking
 
-// Optional: stub toast to prevent real popups
+// Mock toastification
 vi.mock('vue-toastification', () => ({
   useToast: () => ({
     success: vi.fn(),
-    error: vi.fn()
-  })
+    error: vi.fn(),
+  }),
 }))
 
+// Mock localStorage for test isolation
+const mockLocalStorage = (() => {
+  let store: Record<string, string> = {}
+
+  return {
+    getItem: vi.fn((key) => store[key] || null),
+    setItem: vi.fn((key, value) => { store[key] = value }),
+    removeItem: vi.fn((key) => { delete store[key] }),
+    clear: vi.fn(() => { store = {} }),
+  }
+})()
+
+// Replace global localStorage
+Object.defineProperty(global, 'localStorage', {
+  value: mockLocalStorage,
+})
+
 describe('Tracker Store', () => {
+
   beforeEach(() => {
-    // Create a fresh Pinia instance for each test
     setActivePinia(createPinia())
+    localStorage.clear()
+  })
 
-    // Stub localStorage with a memory-based object
-    const memoryStorage: Record<string, string> = {}
+  // ---------------------------------------------------------------
+  // INITIAL STATE
+  // ---------------------------------------------------------------
+  it('starts with an empty transactions array', () => {
+    const store = useTrackerStore()
+    expect(store.transactions).toEqual([])
+  })
 
-    vi.stubGlobal('localStorage', {
-      getItem(key: string) {
-        return memoryStorage[key] ?? null
-      },
-      setItem(key: string, value: string) {
-        memoryStorage[key] = value
-      },
-      removeItem(key: string) {
-        delete memoryStorage[key]
-      },
-      clear() {
-        for (const key in memoryStorage) delete memoryStorage[key]
-      }
+  // ---------------------------------------------------------------
+  // ADD TRANSACTION
+  // ---------------------------------------------------------------
+  it('adds a new transaction', () => {
+    const store = useTrackerStore()
+
+    store.addTransaction({
+      id: 1,
+      description: 'Salary',
+      transactionType: 'Income',
+      amount: 2500,
     })
-  })
 
-  test('initializes with empty transactions array', () => {
-    const store = useTrackerStore()
-    expect(store.transactions).toEqual([])
-  })
-
-  test('addTransaction adds a transaction to store and localStorage', () => {
-    const store = useTrackerStore()
-
-    const newTransaction: Transaction = {
+    expect(store.transactions.length).toBe(1)
+    expect(store.transactions[0]).toMatchObject({
       id: 1,
       description: 'Salary',
       transactionType: 'Income',
-      amount: 1000
-    }
+      amount: 2500,
+    })
 
-    store.addTransaction(newTransaction)
-
-    // Transaction is in the store
-    expect(store.transactions).toContainEqual(newTransaction)
-
-    // Transaction is in localStorage
-    const stored = JSON.parse(localStorage.getItem('transactions')!)
-    expect(stored).toContainEqual(newTransaction)
+    expect(localStorage.setItem).toHaveBeenCalled()
   })
 
-  test('updateTransaction revises an existing transaction in the store and in localStorage', () => {
+  it('coerces string amounts to numbers when adding a transaction', () => {
     const store = useTrackerStore()
 
-    //Create a new transaction and add it to the array and local storage, both of which are empty as we begin.
-    const newTransaction: Transaction = {
+    // Pass amount as a string (simulating form input)
+    store.addTransaction({
       id: 1,
-      description: 'Salary',
+      description: 'String Salary',
       transactionType: 'Income',
-      amount: 1000
-    }
-    store.addTransaction(newTransaction)
+      amount: '3500.50' as any, // Use 'as any' for test purposes
+    })
 
-    //Update the new transaction by changing the amount and replacing the old transaction in the array and local storage.
-    const updatedTransaction: Transaction = {
+    expect(store.transactions.length).toBe(1)
+    // CRITICAL CHECK: Ensure the amount is stored as a number
+    expect(store.transactions[0].amount).toBe(3500.50)
+    expect(typeof store.transactions[0].amount).toBe('number')
+
+    // Check that localStorage stores the stringified array correctly
+    const savedData = JSON.parse(mockLocalStorage.getItem('transactions') as string)
+    expect(savedData[0].amount).toBe(3500.50)
+  })
+
+  // ---------------------------------------------------------------
+  // UPDATE TRANSACTION
+  // ---------------------------------------------------------------
+  it('updates an existing transaction', () => {
+    const store = useTrackerStore()
+
+    store.transactions = [{
       id: 1,
-      description: 'Salary',
-      transactionType: 'Income',
-      amount: 2000
-    }
-    store.updateTransaction(updatedTransaction)
+      description: 'Groceries',
+      transactionType: 'Expense',
+      amount: 100,
+    }]
 
-    //Verify that the array and the local storage have been updated.
-    expect(store.transactions).toContainEqual(updatedTransaction)
-    const stored = JSON.parse(localStorage.getItem('transactions')!)
-    expect(stored).toContainEqual(updatedTransaction)
-  })
-
-  test('deleteTransaction removes an existing transaction from the store and localStorage', () => {
-    const store = useTrackerStore()
-
-    //Create a new transaction and add it to the array and local storage, both of which are empty as we begin.
-    const newTransaction: Transaction = {
+    store.updateTransaction({
       id: 1,
-      description: 'Salary',
-      transactionType: 'Income',
-      amount: 1000
-    }
-    store.addTransaction(newTransaction)
+      description: 'Groceries + Snacks',
+      transactionType: 'Expense',
+      amount: 140,
+    })
 
-    //Delete the transaction that was just added from both the array and local storage.
-    const idOfTransactionToBeDeleted: number = 1;
-    store.deleteTransaction(idOfTransactionToBeDeleted)
+    expect(store.transactions[0]).toMatchObject({
+      id: 1,
+      description: 'Groceries + Snacks',
+      transactionType: 'Expense',
+      amount: 140,
+    })
 
-    // Should be removed from store
-    expect(store.transactions).toEqual([])
-
-    // Should be removed from localStorage
-    const stored = JSON.parse(localStorage.getItem('transactions')!)
-    expect(stored).toEqual([])
+    expect(localStorage.setItem).toHaveBeenCalled()
   })
 
-  test('getNewId returns 1 when there are no transactions', () => {
+  it('coerces string amounts to numbers when updating a transaction', () => {
     const store = useTrackerStore()
 
-    //There are no transactions presently so getNewId() should return 1
-    const result = store.getNewId;
+    store.transactions = [{
+      id: 1,
+      description: 'Old Amount',
+      transactionType: 'Expense',
+      amount: 100,
+    }]
 
-    expect(result).toEqual(1);
+    // Pass the new amount as a string (simulating form input)
+    store.updateTransaction({
+      id: 1,
+      description: 'New Amount as String',
+      transactionType: 'Expense',
+      amount: '55.99' as any, // Use 'as any' for test purposes
+    })
+
+    expect(store.transactions[0].description).toBe('New Amount as String')
+    // CRITICAL CHECK: Ensure the amount is updated and stored as a number
+    expect(store.transactions[0].amount).toBe(55.99)
+    expect(typeof store.transactions[0].amount).toBe('number')
+
+    // Check that localStorage stores the stringified array correctly
+    const savedData = JSON.parse(mockLocalStorage.getItem('transactions') as string)
+    expect(savedData[0].amount).toBe(55.99)
   })
 
-  test('getNewId returns 100 when highest existing transaction id is 99', () => {
+  // ---------------------------------------------------------------
+  // DELETE TRANSACTION — SUCCESS
+  // ---------------------------------------------------------------
+  it('deletes an existing transaction', () => {
     const store = useTrackerStore()
 
-    //Add some transactions so that the highest id is 99.
-    let newTransaction: Transaction = {
-      id: 37,
-      description: 'Salary',
-      transactionType: 'Income',
-      amount: 1000
-    }
-    store.addTransaction(newTransaction)
-    newTransaction = {
-      id: 99,
-      description: 'Salary',
-      transactionType: 'Income',
-      amount: 1000
-    }
-    store.addTransaction(newTransaction)
+    store.transactions = [
+      { id: 1, description: 'A', transactionType: 'Income', amount: 10 },
+      { id: 2, description: 'B', transactionType: 'Expense', amount: 5 },
+    ]
 
-    //The current highest transaction id is 99.
-    const result = store.getNewId;
+    store.deleteTransaction(1)
 
-    expect(result).toEqual(100);
+    expect(store.transactions.length).toBe(1)
+    expect(store.transactions[0].id).toBe(2)
+    expect(localStorage.setItem).toHaveBeenCalled()
   })
 
-  test('getIncome should return the sum of the incomes in the array of transactions', () => {
-
+  // ---------------------------------------------------------------
+  // DELETE TRANSACTION — FAILS IF NOT FOUND
+  // ---------------------------------------------------------------
+  it('does not delete a transaction if ID does not exist', () => {
     const store = useTrackerStore()
 
-    //Add some transactions, some of which should be on type Income
-    let newTransaction: Transaction = {
-      id: 37,
-      description: 'Salary',
-      transactionType: 'Income',
-      amount: 1000
-    }
-    store.addTransaction(newTransaction)
-    newTransaction = {
-      id: 99,
-      description: 'Bonus',
-      transactionType: 'Income',
-      amount: 2000.10
-    }
-    store.addTransaction(newTransaction)
-    newTransaction = {
-      id: 22,
-      description: 'Movie',
-      transactionType: 'Expense',
-      amount: 15.50
-    }
-    store.addTransaction(newTransaction)
-    newTransaction = {
-      id: 73,
-      description: 'Haircut',
-      transactionType: 'Expense',
-      amount: 25.99
-    }
-    store.addTransaction(newTransaction)   
-    
-    const result = store.getIncome;
+    store.transactions = [
+      { id: 5, description: 'Test', transactionType: 'Income', amount: 20 },
+    ]
 
-    expect(result).toEqual(3000.10);
+    store.deleteTransaction(999)
+
+    expect(store.transactions.length).toBe(1) // unchanged
   })
 
-  
-  test('getExpense should return the sum of the expenses in the array of transactions', () => {
-
+  // ---------------------------------------------------------------
+  // GETTERS: NEW ID
+  // ---------------------------------------------------------------
+  it('computes the next new ID', () => {
     const store = useTrackerStore()
 
-    //Add some transactions, some of which should be on type Income
-    let newTransaction: Transaction = {
-      id: 37,
-      description: 'Salary',
-      transactionType: 'Income',
-      amount: 1000
-    }
-    store.addTransaction(newTransaction)
-    newTransaction = {
-      id: 99,
-      description: 'Bonus',
-      transactionType: 'Income',
-      amount: 2000.10
-    }
-    store.addTransaction(newTransaction)
-    newTransaction = {
-      id: 22,
-      description: 'Movie',
-      transactionType: 'Expense',
-      amount: 15.50
-    }
-    store.addTransaction(newTransaction)
-    newTransaction = {
-      id: 73,
-      description: 'Haircut',
-      transactionType: 'Expense',
-      amount: 25.99
-    }
-    store.addTransaction(newTransaction)   
-    
-    const result = store.getExpense;
+    store.transactions = [
+      { id: 10, description: 'A', transactionType: 'Income', amount: 10 },
+      { id: 20, description: 'B', transactionType: 'Expense', amount: 5 },
+    ]
 
-    expect(result).toEqual(41.49);
+    expect(store.getNewId).toBe(21)
   })
 
-  
-  test('getBalance should return the difference between the sums of the incomes and expenses in the array of transactions', () => {
-
+  // ---------------------------------------------------------------
+  // GETTERS: INCOME / EXPENSE / BALANCE
+  // ---------------------------------------------------------------
+  it('computes income, expense, and balance correctly', () => {
     const store = useTrackerStore()
 
-    //Add some transactions, some of which should be on type Income
-    let newTransaction: Transaction = {
-      id: 37,
-      description: 'Salary',
-      transactionType: 'Income',
-      amount: 1000
-    }
-    store.addTransaction(newTransaction)
-    newTransaction = {
-      id: 99,
-      description: 'Bonus',
-      transactionType: 'Income',
-      amount: 2000.10
-    }
-    store.addTransaction(newTransaction)
-    newTransaction = {
-      id: 22,
-      description: 'Movie',
-      transactionType: 'Expense',
-      amount: 15.50
-    }
-    store.addTransaction(newTransaction)
-    newTransaction = {
-      id: 73,
-      description: 'Haircut',
-      transactionType: 'Expense',
-      amount: 25.99
-    }
-    store.addTransaction(newTransaction)   
-    
-    const result = store.getBalance;
+    store.transactions = [
+      { id: 1, description: 'Salary', transactionType: 'Income', amount: 3000 },
+      { id: 2, description: 'Groceries', transactionType: 'Expense', amount: 250 },
+      { id: 3, description: 'Gift', transactionType: 'Income', amount: 100 },
+      { id: 4, description: 'Utilities', transactionType: 'Expense', amount: 120 },
+    ]
 
-    expect(result).toEqual(2958.61);
+    expect(store.getIncome).toBe(3100)
+    expect(store.getExpense).toBe(370)
+    expect(store.getBalance).toBe(2730)
   })
 
+  it('computes income, expense, and balance correctly with floating point math', () => {
+    const store = useTrackerStore()
+
+    store.transactions = [
+      { id: 1, description: 'Small Income', transactionType: 'Income', amount: 1.05 },
+      { id: 2, description: 'Small Expense', transactionType: 'Expense', amount: 0.02 },
+      { id: 3, description: 'Another Income', transactionType: 'Income', amount: 10.99 },
+    ]
+
+    // Income: 1.05 + 10.99 = 12.04
+    expect(store.getIncome).toBe(12.04)
+    // Expense: 0.02
+    expect(store.getExpense).toBe(0.02)
+    // Balance: 12.04 - 0.02 = 12.02
+    expect(store.getBalance).toBe(12.02)
+  })
 })

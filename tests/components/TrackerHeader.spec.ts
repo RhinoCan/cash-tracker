@@ -1,0 +1,21 @@
+import { describe, it, expect } from 'vitest'
+import TrackerHeader from '@/components/TrackerHeader.vue'
+import { mountWithVuetify } from '../test-utils.js' // include the .js extension as required
+
+describe('TrackerHeader', () => {
+  it('renders the app bar with the title and Settings button', () => {
+    // Use your mountWithVuetify helper to wrap the component in Vuetify
+    const wrapper = mountWithVuetify(TrackerHeader)
+
+    // Check that the app bar exists
+    const appBar = wrapper.find('v-app-bar')
+    expect(appBar.exists()).toBe(true)
+
+    // Check the title is present
+    expect(appBar.text()).toContain('Income and Expense Tracker')
+
+    // Check the Settings button exists
+    const settingsButton = wrapper.find('#showSettingsMenu')
+    expect(settingsButton.exists()).toBe(true)
+  })
+})
