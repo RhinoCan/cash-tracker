@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { useTrackerStore } from "@/stores/Tracker";
+import { useTrackerStore } from "@/stores/TransactionStore";
 const storeTracker = useTrackerStore();
 import { TransactionType, Transaction } from "@/types/Transaction";
 import { SubmitEventPromise } from "vuetify";
@@ -23,16 +22,20 @@ const rules = {
     "Amount must be supplied and must be greater than zero",
 };
 
+function closeDialog(value: boolean) {
+  if (!value) model.value = null;
+}
+
 async function onSubmit(event: SubmitEventPromise) {
   const { valid } = await event;
 
   if (valid && model.value) {
-    console.log("unchanged id: " + model.value.id);
-    console.log("updated description: " + model.value.description);
-    console.log("updated transactionType: " + model.value.transactionType);
-    console.log("updated amount: " + model.value.amount);
+    // console.log("unchanged id: " + model.value.id);
+    // console.log("updated description: " + model.value.description);
+    // console.log("updated transactionType: " + model.value.transactionType);
+    // console.log("updated amount: " + model.value.amount);
 
-    /* Use the original transaction id, which was read-only. The remaining values are read from the 
+    /* Use the original transaction id, which was read-only. The remaining values are read from the
          form fields. */
     const updatedTransaction: Transaction = {
       id: model.value.id,
@@ -55,54 +58,57 @@ async function onSubmit(event: SubmitEventPromise) {
     <v-dialog
       v-if="model"
       :model-value="true"
-      @update:model-value="(v: string) => v && (model = null)"
+      @update:model-value="closeDialog"
       max-width="500"
       persistent
     >
       <template #default>
-        <v-card color="white" variant="elevated" class="mx-auto">
-          <v-card-title class="bg-yellow">Update Transaction</v-card-title>
+        <v-card color="surface" variant="elevated" class="mx-auto">
+          <v-card-title class="bg-primary text-primary-foreground app-title">Update Transaction</v-card-title>
           <v-form @submit.prevent="onSubmit" ref="updateTransactionForm">
             <v-card-text>
-              <p>
+              <p class="mb-4">
                 Change any part of the transaction you like, apart from the key
                 (which is the ID):
               </p>
-              <v-row>
-                <v-col cols="3">
-                  <v-text-field
-                    label="Id"
-                    readonly
-                    :model-value="model.id"
-                    variant="outlined"
-                  ></v-text-field>
-                </v-col>
-                <v-col cols="9">
-                  <v-text-field
-                    label="Description"
-                    v-model="model.description"
-                    variant="outlined"
-                    :rules="[rules.descriptionRequired]"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="6">
-                  <v-select
-                    label="Transaction Type"
-                    v-model="model.transactionType"
-                    :items="['Income', 'Expense']"
-                  ></v-select>
-                </v-col>
-                <v-col cols="6">
-                  <v-text-field
-                    label="Amount"
-                    v-model.number="model.amount"
-                    variant="outlined"
-                    :rules="[rules.amountValidations]"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
+              <v-container>
+                <v-row dense>
+                  <v-col cols="3">
+                    <v-text-field
+                      label="Id"
+                      disabled
+                      :model-value="model.id"
+                      variant="outlined"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="9">
+                    <v-text-field
+                      label="Description"
+                      v-model="model.description"
+                      variant="outlined"
+                      :rules="[rules.descriptionRequired]"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+                <v-row dense>
+                  <v-col cols="6">
+                    <v-select
+                      label="Transaction Type"
+                      v-model="model.transactionType"
+                      :items="['Income', 'Expense']"
+                      variant="outlined"
+                    ></v-select>
+                  </v-col>
+                  <v-col cols="6">
+                    <v-text-field
+                      label="Amount"
+                      v-model.number="model.amount"
+                      variant="outlined"
+                      :rules="[rules.amountValidations]"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+              </v-container>
               <p>
                 Press the UPDATE TRANSACTION button to update the transaction
                 with the values you have changed. Press the CANCEL button to
@@ -110,24 +116,23 @@ async function onSubmit(event: SubmitEventPromise) {
               </p>
             </v-card-text>
             <v-card-actions>
-              
-                <v-spacer></v-spacer>
-                <v-btn
-                  text="Cancel"
-                  variant="outlined"
-                  elevated="16"
-                  color="black"
-                  class="mr-2"
-                  @click="model = null"
-                ></v-btn>                
-                <v-btn
-                  text="Update Transaction"
-                  variant="elevated"
-                  elevated="8"
-                  color="red"
-                  type="submit"
-                  @click="onSubmit"
-                ></v-btn>
+              <v-spacer></v-spacer>
+              <v-btn
+                text="Cancel"
+                variant="outlined"
+                elevated="16"
+                color="secondary"
+                class="mr-2"
+                @click="model = null"
+              ></v-btn>
+              <v-btn
+                text="Update Transaction"
+                variant="elevated"
+                elevated="8"
+                color="primary"
+                type="submit"
+                @click="onSubmit"
+              ></v-btn>
             </v-card-actions>
           </v-form>
         </v-card>
@@ -137,7 +142,7 @@ async function onSubmit(event: SubmitEventPromise) {
 </template>
 
 <style scoped>
-p {
+/* p {
   font-size: smaller;
-}
+} */
 </style>

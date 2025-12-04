@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import TrackerHeader from "@/components/TrackerHeader.vue";
 import TrackerAbout from "@/components/TrackerAbout.vue";
-import AccountBalance from "@/components/AccountBalance.vue";
-import IncomeExpense from "@/components/IncomeExpense.vue";
-import TransactionHistory from '@/components/TransactionHistory.vue';
+import AccountSummary from "@/components/AccountSummary.vue";
+// import AccountBalance from "@/components/AccountBalance.vue";
+// import IncomeExpense from "@/components/IncomeExpense.vue";
+import TransactionHistory from "@/components/TransactionHistory.vue";
 import AddTransaction from "@/components/AddTransaction.vue";
 
 import { useToast } from "vue-toastification";
 
 import { ref, onMounted } from "vue";
-import { useTrackerStore } from "@/stores/Tracker";
+import { useTrackerStore } from "@/stores/TransactionStore";
 
 const transactions = ref([]);
 const storeTracker = useTrackerStore();
@@ -28,6 +29,7 @@ onMounted(() => {
     <v-main class="bg-teal">
       <v-container :max-width="1000" class="bg-grey-lighten-3">
         <TrackerAbout />
+        <AccountSummary />
         <AccountBalance />
         <IncomeExpense />
         <TransactionHistory />
@@ -39,9 +41,9 @@ onMounted(() => {
 
 <style>
 .v-application {
-  background-color: #FFCA28 !important;
+  background-color: #ECEFF1 !important;
 }
 main.v-main {
-  background-color: #FFCA28 !important;
+  background-color: #ECEFF1 !important;
 }
 </style>

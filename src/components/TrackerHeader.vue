@@ -8,12 +8,12 @@ const showCurrencyDialog = ref(false)
 </script>
 
 <template>
-  <v-app-bar title="Income and Expense Tracker" color="indigo">
+  <v-app-bar title="Income and Expense Tracker" color="primary">
     <v-btn id="showSettingsMenu" color="yellow" prepend-icon="mdi-cog">
       Settings
     </v-btn>
 
-    <v-menu activator="#showSettingsMenu" :close-on-content-click="false">
+    <v-menu activator="#showSettingsMenu" :close-on-content-click="true">
       <v-list>
         <v-list-item>
           <v-btn
@@ -47,4 +47,4 @@ const showCurrencyDialog = ref(false)
       <ChangeCurrency @saved="showCurrencyDialog = false" @cancel="showCurrencyDialog = false" />
     </v-dialog>
   </v-app-bar>
-</template> 
+</template>

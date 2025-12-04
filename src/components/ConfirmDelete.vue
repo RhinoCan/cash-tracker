@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { useCurrencyFormatter } from "@/composables/useCurrencyFormatter.ts";
-import { useTrackerStore } from "@/stores/Tracker";
+import { useTrackerStore } from "@/stores/TransactionStore";
 import { computed } from "vue";
 
 //Call the composable function, which returns an object.
 //Destructure the 'displayMoney' property from that return
 const { displayMoney } = useCurrencyFormatter();
-
 
 type Item = {
   id: number;
@@ -48,15 +47,15 @@ const deleteTransaction = () => {
   <v-container>
     <v-dialog v-if="model" v-model="dialogOpen" max-width="500" persistent>
       <template #default>
-        <v-card color="white" variant="elevated" class="mx-auto">
-          <v-card-title class="bg-red">Confirm or Cancel Delete</v-card-title>
+        <v-card color="surface" variant="elevated" class="mx-auto">
+          <v-card-title class="bg-primary text-primary-foreground app-title">Confirm or Cancel Delete</v-card-title>
           <v-card-text>
             <p>This is the transaction that you are about to delete:</p>
             <v-row>
               <v-col cols="3">
                 <v-text-field
                   label="Id"
-                  readonly
+                  disabled
                   variant="outlined"
                   :model-value="model.id"
                 ></v-text-field>
@@ -64,7 +63,7 @@ const deleteTransaction = () => {
               <v-col cols="9">
                 <v-text-field
                   label="Description"
-                  readonly
+                  disabled
                   variant="outlined"
                   :model-value="model.description"
                 ></v-text-field>
@@ -74,7 +73,7 @@ const deleteTransaction = () => {
               <v-col cols="6">
                 <v-text-field
                   label="Transaction Type"
-                  readonly
+                  disabled
                   variant="outlined"
                   :model-value="model.transactionType"
                 ></v-text-field>
@@ -82,7 +81,7 @@ const deleteTransaction = () => {
               <v-col cols="6">
                 <v-text-field
                   label="Amount"
-                  readonly
+                  disabled
                   variant="outlined"
                   :model-value="displayMoney(model.amount)"
                 ></v-text-field>
@@ -99,7 +98,7 @@ const deleteTransaction = () => {
               text="Cancel"
               variant="outlined"
               elevated="16"
-              color="black"
+              color="secondary"
               class="mr-2"
               @click="model = null"
             ></v-btn>
@@ -107,7 +106,7 @@ const deleteTransaction = () => {
               text="Delete Transaction"
               variant="elevated"
               elevated="8"
-              color="red"
+              color="primary"
               @click="deleteTransaction"
             ></v-btn>
           </v-card-actions>
@@ -118,7 +117,5 @@ const deleteTransaction = () => {
 </template>
 
 <style scoped>
-p {
-  font-size: smaller;
-}
+
 </style>

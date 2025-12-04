@@ -1,15 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useTrackerStore } from "@/stores/Tracker.ts";
-let storeTracker = useTrackerStore();
-
+import { useTrackerStore } from "@/stores/TransactionStore";
 import { useCurrencyFormatter } from "@/composables/useCurrencyFormatter.ts";
 
 import ConfirmDelete from "./ConfirmDelete.vue";
 import UpdateTransaction from "./UpdateTransaction.vue";
 
-//Call the composable function, which returns an object.
-//Destructure the 'displayMoney' property from that return
+const storeTracker = useTrackerStore();
 const { displayMoney } = useCurrencyFormatter();
 
 type Item = {
@@ -20,126 +17,62 @@ type Item = {
 };
 
 const search = ref("");
-
 const selectedItemDelete = ref<Item | null>(null);
 const selectedItemUpdate = ref<Item | null>(null);
 
 import type { DataTableHeader } from "vuetify";
 
 const headers = ref<DataTableHeader<Item>[]>([
-  {
-    align: "end",
-    key: "id",
-    sortable: true,
-    title: "ID",
-  },
-  {
-    align: "start",
-    key: "description",
-    sortable: true,
-    title: "Description",
-  },
-  {
-    align: "start",
-    key: "transactionType",
-    sortable: true,
-    title: "Type",
-  },
-  {
-    align: "end",
-    key: "amount",
-    sortable: true,
-    title: "Amount",
-  },
-  {
-    align: "center",
-    key: "actions",
-    sortable: false,
-    title: "Actions",
-  },
+  { align: "end", key: "id", sortable: true, title: "ID" },
+  { align: "start", key: "description", sortable: true, title: "Description" },
+  { align: "start", key: "transactionType", sortable: true, title: "Type" },
+  { align: "end", key: "amount", sortable: true, title: "Amount" },
+  { align: "center", key: "actions", sortable: false, title: "Actions" },
 ]);
 
 const items = computed(() => storeTracker.transactions);
+
+// Computed function for amount cell class
+function amountClass(item: Item) {
+  return ["money", item.transactionType === "Income" ? "plus" : "minus", "right"];
+}
 </script>
 
+
 <template>
-  <v-container>
-    <v-row>
-      <v-col>
-        <v-toolbar title="History" color="pink" density="compact"></v-toolbar>
-      </v-col>
-    </v-row>
-    <v-card elevation="8">
-      <template v-slot:text>
-        <v-text-field
-          v-model="search"
-          label="Search"
-          prepend-inner-icon="mdi-magnify"
-          variant="outlined"
-          hide-details
-          single-line
-        ></v-text-field>
-      </template>
+  <v-card elevation="8" color="surface">
+    <v-card-title class="bg-primary text-primary-foreground app-title">History</v-card-title>
+
+    <v-card-text>
+      <!-- Search Field -->
+      <v-text-field
+        v-model="search"
+        label="Search"
+        prepend-inner-icon="mdi-magnify"
+        variant="outlined"
+        hide-details
+        single-line
+        class="mt-4"
+      ></v-text-field>
+
+      <!-- Transactions Table -->
       <v-data-table
         :headers="headers"
         :items="items"
         item-key="id"
         items-per-page="10"
         :search="search"
+        dense
       >
-        <!-- <template v-slot:headers="{ columns, isSorted, getSortIcon, toggleSort }">
-                <tr style="font-weight: 700">
-                  <template v-for="column in columns" :key="column.key">
-                    <td v-if="column.title === 'ID' || column.title === 'Amount'" class="right">
-                      <span class="mr-2 cursor-pointer" @click="() => toggleSort(column)">{{ column.title }}</span>
-                      <template v-if="isSorted(column)">
-                        <v-icon :icon="getSortIcon(column)"></v-icon>
-                      </template>
-                    </td>
-                    <td v-else-if="column.title === 'Description' || column.title === 'Type'" class="left">
-                      <span class="mr-2 cursor-pointer" @click="() => toggleSort(column)">{{ column.title }}</span>
-                      <template v-if="isSorted(column)">
-                        <v-icon :icon="getSortIcon(column)"></v-icon>
-                      </template>
-                    </td>
-                    <td v-else-if="column.title === 'Actions'" class="center">{{ column.title }}</td>
-                    <td v-else>Non-existent column title is being passed to the headers slot. Notify developer.</td>
-                  </template>
-                </tr>
-              </template> -->
-
-        <template v-slot:header.id="{ column }">
-          <span class="header">{{ column.title }}</span>
-        </template>
-        <template v-slot:header.description="{ column }">
-          <span class="header">{{ column.title }}</span>
-        </template>
-        <template v-slot:header.transactionType="{ column }">
-          <span class="header">{{ column.title }}</span>
-        </template>
-        <template v-slot:header.amount="{ column }">
-          <span class="header">{{ column.title }}</span>
-        </template>
-        <template v-slot:header.actions="{ column }">
-          <span class="header">{{ column.title }}</span>
-        </template>
-
+        <!-- Item Row Template -->
         <template v-slot:item="{ item }">
           <tr>
             <td class="right">{{ item.id }}</td>
             <td>{{ item.description }}</td>
             <td>{{ item.transactionType }}</td>
-            <td
-              v-if="item.transactionType === 'Income'"
-              class="money plus right"
-            >
+            <td :class="amountClass(item)">
               {{ displayMoney(item.amount) }}
             </td>
-            <td v-else class="money minus right">
-              {{ displayMoney(item.amount) }}
-            </td>
-            <!-- <td class="center"><v-icon color="red" size="large"
-                        @click="storeTracker.deleteTransaction(item.id)"> mdi-delete </v-icon></td> -->
             <td class="center">
               <v-btn
                 icon="mdi-pencil"
@@ -163,16 +96,23 @@ const items = computed(() => storeTracker.transactions);
           </tr>
         </template>
       </v-data-table>
+
+      <!-- Modals / Dialogs -->
       <ConfirmDelete v-model="selectedItemDelete" />
       <UpdateTransaction v-model="selectedItemUpdate" />
-    </v-card>
-  </v-container>
+    </v-card-text>
+  </v-card>
 </template>
 
+
 <style scoped>
-span.header {
-  font-weight: 700;
-  font-size: larger;
+/* Bold and slightly larger headers */
+:deep(.v-data-table th) {
+  font-weight: 700 !important;
+  font-size: 1.0rem;
+}
+.v-card-text {
+  padding-bottom: 0;
 }
 .left {
   text-align: left;

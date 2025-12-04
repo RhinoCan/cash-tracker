@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useTrackerStore } from "@/stores/Tracker.ts";
+import { useTrackerStore } from "@/stores/TransactionStore";
 import { useCurrencyFormatter } from "@/composables/useCurrencyFormatter.ts";
 
 // Pinia store for transactions
@@ -17,11 +17,15 @@ const { displayMoney } = useCurrencyFormatter();
 </script>
 
 <template>
-  <v-card elevation="8">
-    <v-card-title class="bg-yellow">Account Balance</v-card-title>
+  <v-card elevation="8" color="surface">
+    <v-card-title class="bg-primary text-primary-foreground app-title">Account Balance</v-card-title>
     <v-card-text>
-      <p v-if="storeTracker.getBalance >= 0" class="money plus">{{ displayMoney(storeTracker.getBalance) }}</p>
-      <p v-else class="money minus">{{ displayMoney(storeTracker.getBalance) }}</p>
+      <p v-if="storeTracker.getBalance >= 0" class="money plus">
+        {{ displayMoney(storeTracker.getBalance) }}
+      </p>
+      <p v-else class="money minus">
+        {{ displayMoney(storeTracker.getBalance) }}
+      </p>
     </v-card-text>
   </v-card>
 </template>

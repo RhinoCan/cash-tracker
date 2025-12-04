@@ -1,14 +1,13 @@
 <script lang="ts" setup>
 import { ref } from "vue";
-
-import { useTrackerStore } from "@/stores/Tracker";
-const storeTracker = useTrackerStore();
-
+import { useTrackerStore } from "@/stores/TransactionStore";
 import { TransactionType, Transaction } from "@/types/Transaction";
 import { SubmitEventPromise } from "vuetify";
 
+const storeTracker = useTrackerStore();
+
 const descriptionModel = ref("");
-const transactionTypeModel = ref("");
+const transactionTypeModel = ref<TransactionType | "">("");
 const amountModel = ref("");
 const newTransactionForm = ref();
 
@@ -25,10 +24,8 @@ async function onSubmit(event: SubmitEventPromise) {
   const { valid } = await event;
 
   if (valid) {
-    /* Get the Id for the new transaction. */
-    let newId: number = storeTracker.getNewId;
+    const newId: number = storeTracker.getNewId;
 
-    /* Bundle the new Id and the data from the form into an object. */
     const newTransaction: Transaction = {
       id: newId,
       description: descriptionModel.value,
@@ -36,33 +33,24 @@ async function onSubmit(event: SubmitEventPromise) {
       amount: parseFloat(amountModel.value),
     };
 
-    /* Insert the transaction into the transactions array. */
     storeTracker.addTransaction(newTransaction);
-
-    /* Blank out the form fields and clear the error messages. */
     resetForm();
   }
 }
 
 function resetForm() {
   newTransactionForm.value.reset();
+  transactionTypeModel.value = "";
 }
 </script>
 
-
 <template>
-  <v-container>
-    <v-row>
-      <v-col cols="12">
-        <v-toolbar
-          color="teal"
-          title="Add New Transaction"
-          density="compact"
-        ></v-toolbar>
-      </v-col>
-    </v-row>
-    <v-card elevation="8" class="mx-auto">
-      <v-form id="form" @submit.prevent="onSubmit" ref="newTransactionForm">
+  <v-card elevation="8" color="surface">
+    <v-card-title class="bg-primary text-primary-foreground app-title" variant="elevated"
+      >Add New Transaction</v-card-title
+    >
+    <v-container>
+      <v-form @submit.prevent="onSubmit" ref="newTransactionForm">
         <v-text-field
           class="mt-2"
           label="Description"
@@ -71,43 +59,50 @@ function resetForm() {
           variant="outlined"
           :rules="[rules.descriptionRequired]"
         ></v-text-field>
-        <v-chip variant="flat" color="white">Transaction Type?</v-chip>
-        <v-radio-group
-          v-model="transactionTypeModel"
-          inline
-          :rules="[rules.transactionTypeRequired]"
-        >
-          <v-radio label="Income" value="Income"></v-radio>
-          <v-radio label="Expense" value="Expense"></v-radio>
-        </v-radio-group>
+
+        <!-- Transaction type with radio buttons -->
+        <div class="mt-2">
+          <v-chip variant="flat" color="white">Transaction type?</v-chip>
+          <v-radio-group
+            v-model="transactionTypeModel"
+            :rules="[rules.transactionTypeRequired]"
+          >
+            <v-radio label="Income" value="Income" color="green"></v-radio>
+            <v-radio label="Expense" value="Expense" color="red"></v-radio>
+          </v-radio-group>
+        </div>
+
         <v-text-field
+          class="mt-2"
           label="Amount"
           v-model="amountModel"
           placeholder="Enter amount..."
           variant="outlined"
           :rules="[rules.amountValidations]"
         ></v-text-field>
+
         <div class="text-end mb-2">
           <v-btn
             @click="resetForm"
-            color="black"
+            color="secondary"
             class="mr-2"
             variant="outlined"
             rounded="lg"
-            >Reset</v-btn
           >
+            Reset
+          </v-btn>
           <v-btn
             type="submit"
             @click="onSubmit"
-            color="red"
+            color="primary"
             elevation="8"
             rounded="lg"
             class="mr-2"
-            >Add transaction</v-btn
           >
+            Add transaction
+          </v-btn>
         </div>
       </v-form>
-    </v-card>
-  </v-container>
+    </v-container>
+  </v-card>
 </template>
-
