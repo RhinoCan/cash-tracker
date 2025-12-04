@@ -14,5 +14,5 @@ export default defineConfig({
   build: {
     outDir: 'dist', // default, can omit
   },
-  base: './' // important for GitHub Pages, ensures relative paths
+  base: '/cash-tracker/' // important for GitHub Pages, ensures relative paths
 });
